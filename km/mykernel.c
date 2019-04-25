@@ -49,14 +49,28 @@ struct file_operations gpio_fops = {
 
 /* Global varibles */
 static int mygpio_major = 61;
-/* GPIO pins */
-static unsigned int GPIO_LEDs[3] = {16, 28, 29};
-static unsigned int GPIO_IR0 = 113;
-static unsigned int GPIO_IR1 = 30;
+static int play_mode = 1;
+static int numofpeople = 1;
+static int state = 1;
+static unsigned int Brightness = 128; // PWM  = Brightness/128
 
+/* GPIO pins */
+static unsigned int GPIO_LEDR = 28; //Red
+static unsigned int GPIO_LEDB = 29; //Blue
+static unsigned int GPIO_IR0 = 113; //IR sensor0
+static unsigned int GPIO_IR1 = 30; //IR sensor1
+
+/* Timer */
+int p_timer_interval = 1;
+int p_timer_interval1 = 100;
+int p_timer_interval2 = 1000;
 
 /* Global data structures */
+struct timer_list p_timer;
+
 struct gpio_user_info {
+	int play_mode;
+	int numofpeople;
 	unsigned int count_value;
 	char count_period[4];
 	char direction[10];
@@ -64,6 +78,72 @@ struct gpio_user_info {
 	char brightness[10];
 };
 static struct gpio_user_info* gpio_data;
+
+struct BrightnessList{
+    unsigned int val;
+    char brightness[10];
+    struct BrightnessList *next;
+ };
+struct BrightnessList* head; 
+struct BrightnessList* second; 
+struct BrightnessList* third; 
+struct BrightnessList* cur;
+
+
+
+
+
+void _TimerHandler(unsigned long data){
+	
+
+	if(play_mode == 0 || numofpeople == 0){
+		Brightness = 0;
+		PWM_PWDUTY0 = (0<<10) | Brightness;
+		gpio_direction_output(GPIO_LEDR, 0);
+		gpio_direction_output(GPIO_LEDB, 0);
+		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval2));
+	
+	}
+
+	else if(play_mode == 1 && numofpeople != 0){
+		gpio_direction_output(GPIO_LEDR, 0);
+		gpio_direction_output(GPIO_LEDB, 0);
+		if(Brightness ==128)
+			Brightness = 1;
+		Brightness++;
+		PWM_PWDUTY0 = (0<<10) | Brightness;
+		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval));
+	}
+
+
+	else if(play_mode == 2 && numofpeople != 0){
+		Brightness = 128;
+		gpio_direction_output(GPIO_LEDR, 1);
+		gpio_direction_output(GPIO_LEDB, 1);
+		if(state >= 7)
+				state = 1;
+			else
+				state = state + 1;
+		if(state%2 == 0)
+			PWM_PWDUTY0 = (0<<10) | 0;//CKEN &= ~(1 << 0);
+		else
+			PWM_PWDUTY0 = (0<<10) | Brightness;
+		state /= 2;
+		gpio_set_value(GPIO_LEDR, state%2);
+		state /= 2;
+		gpio_set_value(GPIO_LEDB, state%2);
+		state /= 2;
+
+
+		strcpy(gpio_data->brightness, cur->brightness);
+		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval2));
+	}
+
+
+
+
+
+}
 
 
 
@@ -82,6 +162,10 @@ static int mygpio_init(void)
 	
 	/* Allocate memory */
 	gpio_data = kmalloc(sizeof (struct gpio_user_info), GFP_KERNEL);
+	head= kmalloc(sizeof (struct BrightnessList), GFP_KERNEL);
+	second= kmalloc(sizeof (struct BrightnessList), GFP_KERNEL);
+	third= kmalloc(sizeof (struct BrightnessList), GFP_KERNEL);
+	cur= kmalloc(sizeof (struct BrightnessList), GFP_KERNEL);
 	if (!gpio_data)
 	{ 
 		result = -ENOMEM;
@@ -90,6 +174,8 @@ static int mygpio_init(void)
 
 	/* Initialize data */
 	gpio_data->count_value = 0;
+	gpio_data->play_mode = 0;
+	gpio_data->numofpeople = 0;
 	strcpy(gpio_data->count_period, "H");
 	strcpy(gpio_data->direction, "Down");
 	strcpy(gpio_data->state, "Hold");
@@ -97,15 +183,43 @@ static int mygpio_init(void)
 
 
 	/* Set up GPIO*/
-	int i;	
     	gpio_direction_input(GPIO_IR0);
     	gpio_direction_input(GPIO_IR1);
-	for(i = 0; i < 3; i++){
-		gpio_direction_output(GPIO_LEDs[i], 0);
-	}
-	for(i = 0; i < 3; i++){
-		gpio_set_value(GPIO_LEDs[i], 1);
-	}
+
+
+	gpio_direction_output(28, 1);
+	gpio_direction_output(29, 1);
+
+	/* Set up PWM */
+	head->val = 1;
+	strcpy(head->brightness, "L");
+	head->next = second;
+	second->val = 16;
+	strcpy(second->brightness, "M");
+	second->next = third;
+	third->val = 128;
+	strcpy(third->brightness, "H");
+	third->next = head;
+
+
+
+
+
+	cur = head;
+	pxa_gpio_mode( GPIO16_PWM0_MD);
+	PWM_CTRL0 = (1<<6) | 255;  
+	PWM_PWDUTY0 = (0<<10) | Brightness;
+	PWM_PERVAL0 = 128;
+	CKEN |= CKEN0_PWM0;
+
+
+
+
+
+
+	/* Set up timer  */
+	setup_timer(&p_timer, _TimerHandler, 0);
+	mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval));
 
 
 	printk(KERN_INFO "P-Timer inserted.\n");
@@ -127,6 +241,11 @@ static void mygpio_exit(void)
 	unregister_chrdev(mygpio_major, "mygpio");
 	/* Freeing buffer memory */
 	kfree(gpio_data);
+	kfree(head);
+	kfree(second);
+	kfree(third);
+	kfree(cur);
+	del_timer(&p_timer);
 	printk(KERN_ALERT "Removing gpio module\n");
 	
 }
