@@ -97,17 +97,16 @@ void _TimerHandler(unsigned long data){
 	
 
 	if(play_mode == 0 || numofpeople == 0){
-		Brightness = 0;
-		PWM_PWDUTY0 = (0<<10) | Brightness;
-		gpio_direction_output(GPIO_LEDR, 0);
-		gpio_direction_output(GPIO_LEDB, 0);
+		PWM_PWDUTY0 = (0<<10) | 0;
+		gpio_set_value(GPIO_LEDR, 0);
+		gpio_set_value(GPIO_LEDB, 0);
 		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval2));
 	
 	}
 
 	else if(play_mode == 1 && numofpeople != 0){
-		gpio_direction_output(GPIO_LEDR, 0);
-		gpio_direction_output(GPIO_LEDB, 0);
+		gpio_set_value(GPIO_LEDR, 0);
+		gpio_set_value(GPIO_LEDB, 0);
 		if(Brightness ==128)
 			Brightness = 1;
 		Brightness++;
@@ -117,24 +116,19 @@ void _TimerHandler(unsigned long data){
 
 
 	else if(play_mode == 2 && numofpeople != 0){
-		Brightness = 128;
-		gpio_direction_output(GPIO_LEDR, 1);
-		gpio_direction_output(GPIO_LEDB, 1);
 		if(state >= 7)
 				state = 1;
 			else
 				state = state + 1;
-		if(state%2 == 0)
+		int val = state;
+		if(val%2 == 0)
 			PWM_PWDUTY0 = (0<<10) | 0;//CKEN &= ~(1 << 0);
 		else
-			PWM_PWDUTY0 = (0<<10) | Brightness;
-		state /= 2;
-		gpio_set_value(GPIO_LEDR, state%2);
-		state /= 2;
-		gpio_set_value(GPIO_LEDB, state%2);
-		state /= 2;
-
-
+			PWM_PWDUTY0 = (0<<10) | 128;
+		val /= 2;
+		gpio_set_value(GPIO_LEDR, val%2);
+		val /= 2;
+		gpio_set_value(GPIO_LEDB, val%2);
 		strcpy(gpio_data->brightness, cur->brightness);
 		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval2));
 	}
@@ -185,10 +179,8 @@ static int mygpio_init(void)
 	/* Set up GPIO*/
     	gpio_direction_input(GPIO_IR0);
     	gpio_direction_input(GPIO_IR1);
-
-
-	gpio_direction_output(28, 1);
-	gpio_direction_output(29, 1);
+	gpio_direction_output(28, 0);
+	gpio_direction_output(29, 0);
 
 	/* Set up PWM */
 	head->val = 1;
