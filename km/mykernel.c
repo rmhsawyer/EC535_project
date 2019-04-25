@@ -185,7 +185,7 @@ void _TimerHandler1(unsigned long data){
 	IRQ_1 = 0;
 	IRQ_2 = 0;
 	direction = 0;
-	printk(numofpeople);
+	play_mode == 1;
 	return;
 }
 
@@ -226,8 +226,8 @@ static int mygpio_init(void)
 	/* Set up GPIO*/
     	gpio_direction_input(GPIO_IR0);
     	gpio_direction_input(GPIO_IR1);
-	gpio_direction_output(28, 0);
-	gpio_direction_output(29, 0);
+	gpio_direction_output(GPIO_LEDR, 0);
+	gpio_direction_output(GPIO_LEDB, 0);
 
 	/* Set up PWM */
 	pxa_gpio_mode( GPIO16_PWM0_MD);
@@ -260,7 +260,7 @@ static int mygpio_init(void)
 	/* Set up timer  */
 	setup_timer(&p_timer, _TimerHandler, 0);
 	mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval));
-
+	setup_timer(&p_timer1, _TimerHandler1, 0);
 
 	printk(KERN_INFO "P-Timer inserted.\n");
 	return 0;
@@ -281,10 +281,6 @@ static void mygpio_exit(void)
 	unregister_chrdev(mygpio_major, "mygpio");
 	/* Freeing buffer memory */
 	kfree(gpio_data);
-	kfree(head);
-	kfree(second);
-	kfree(third);
-	kfree(cur);
 	del_timer(&p_timer);
 	del_timer(&p_timer1);
 	free_irq(IRQ_GPIO(GPIO_IR0 ), NULL);
