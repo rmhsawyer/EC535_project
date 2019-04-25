@@ -49,24 +49,29 @@ struct file_operations gpio_fops = {
 
 /* Global varibles */
 static int mygpio_major = 61;
-static int play_mode = 1;
-static int numofpeople = 1;
-static int state = 1;
+static unsigned int play_mode = 2;
+static unsigned int numofpeople = 1;
+static unsigned int state = 1;
 static unsigned int Brightness = 128; // PWM  = Brightness/128
+static unsigned int IRQ_1 = 0;
+static unsigned int IRQ_2 = 0;
+static int direction = 0;
 
 /* GPIO pins */
 static unsigned int GPIO_LEDR = 28; //Red
 static unsigned int GPIO_LEDB = 29; //Blue
-static unsigned int GPIO_IR0 = 113; //IR sensor0
+static unsigned int GPIO_IR0 = 101; //IR sensor0
 static unsigned int GPIO_IR1 = 30; //IR sensor1
 
 /* Timer */
 int p_timer_interval = 1;
-int p_timer_interval1 = 100;
-int p_timer_interval2 = 1000;
+int p_timer_interval1 = 10;
+int p_timer_interval2 = 100;
+int p_timer_interval3 = 1000;
 
 /* Global data structures */
 struct timer_list p_timer;
+struct timer_list p_timer1;
 
 struct gpio_user_info {
 	int play_mode;
@@ -95,12 +100,11 @@ struct BrightnessList* cur;
 
 void _TimerHandler(unsigned long data){
 	
-
 	if(play_mode == 0 || numofpeople == 0){
 		PWM_PWDUTY0 = (0<<10) | 0;
 		gpio_set_value(GPIO_LEDR, 0);
 		gpio_set_value(GPIO_LEDB, 0);
-		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval2));
+		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval3));
 	
 	}
 
@@ -111,7 +115,7 @@ void _TimerHandler(unsigned long data){
 			Brightness = 1;
 		Brightness++;
 		PWM_PWDUTY0 = (0<<10) | Brightness;
-		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval));
+		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval1));
 	}
 
 
@@ -130,17 +134,60 @@ void _TimerHandler(unsigned long data){
 		val /= 2;
 		gpio_set_value(GPIO_LEDB, val%2);
 		strcpy(gpio_data->brightness, cur->brightness);
-		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval2));
+		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval3));
 	}
 
-
-
+	else{
+		PWM_PWDUTY0 = (0<<10) | 128;
+		gpio_set_value(GPIO_LEDR, 1);
+		gpio_set_value(GPIO_LEDB, 1);
+		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval3));
+	}
 
 
 }
 
 
 
+irqreturn_t gpio_irq0(int irq, void *dev_id, struct pt_regs *regs)
+{
+	//no debounce, active for both edges
+	IRQ_1 = 1;
+	if(IRQ_2 == 0)
+		direction = 1;
+	else 
+		direction = 2;
+	if(!IRQ_2)
+		mod_timer( &p_timer1, jiffies+msecs_to_jiffies(p_timer_interval3));
+	return IRQ_HANDLED;
+}
+
+irqreturn_t gpio_irq1(int irq, void *dev_id, struct pt_regs *regs)
+{
+	IRQ_2 = 1;
+	if(IRQ_1 == 0)
+		direction = 2;
+	else 
+		direction = 1;
+	if(!IRQ_1)
+		mod_timer( &p_timer1, jiffies+msecs_to_jiffies(p_timer_interval3));
+	return IRQ_HANDLED;
+}
+
+void _TimerHandler1(unsigned long data){
+	if(IRQ_2 == 1 && IRQ_1 == 1)
+	{	
+		if(direction == 1)
+			numofpeople++;
+		if(direction == 2)
+			numofpeople = numofpeople<1? 0 : numofpeople-1;
+	}
+	IRQ_1 = 0;
+	IRQ_2 = 0;
+	direction = 0;
+	printk(numofpeople);
+	return;
+}
 
 static int mygpio_init(void)
 {
@@ -183,21 +230,6 @@ static int mygpio_init(void)
 	gpio_direction_output(29, 0);
 
 	/* Set up PWM */
-	head->val = 1;
-	strcpy(head->brightness, "L");
-	head->next = second;
-	second->val = 16;
-	strcpy(second->brightness, "M");
-	second->next = third;
-	third->val = 128;
-	strcpy(third->brightness, "H");
-	third->next = head;
-
-
-
-
-
-	cur = head;
 	pxa_gpio_mode( GPIO16_PWM0_MD);
 	PWM_CTRL0 = (1<<6) | 255;  
 	PWM_PWDUTY0 = (0<<10) | Brightness;
@@ -205,6 +237,22 @@ static int mygpio_init(void)
 	CKEN |= CKEN0_PWM0;
 
 
+	/* Set up Interrupts*/
+	pxa_gpio_mode(GPIO_IR0 | GPIO_IN);
+	int irq = IRQ_GPIO(GPIO_IR0);
+	if (request_irq(irq, &gpio_irq0, SA_INTERRUPT | SA_TRIGGER_RISING,
+				"GPIO_IR0", NULL) != 0 ) {
+                printk ( "irq not acquired \n" );
+                return -1;
+        }
+
+	pxa_gpio_mode(GPIO_IR1| GPIO_IN);
+	int irq1 = IRQ_GPIO(GPIO_IR1);
+	if (request_irq(irq1, &gpio_irq1, SA_INTERRUPT | SA_TRIGGER_RISING,
+				"GPIO_IR1", NULL) != 0 ) {
+                printk ( "irq not acquired \n" );
+                return -1;
+        }
 
 
 
@@ -238,6 +286,9 @@ static void mygpio_exit(void)
 	kfree(third);
 	kfree(cur);
 	del_timer(&p_timer);
+	del_timer(&p_timer1);
+	free_irq(IRQ_GPIO(GPIO_IR0 ), NULL);
+	free_irq(IRQ_GPIO(GPIO_IR1 ), NULL);
 	printk(KERN_ALERT "Removing gpio module\n");
 	
 }
