@@ -67,12 +67,9 @@ static unsigned int GPIO_IR1 = 30; //IR sensor1
 int p_timer_interval = 1;
 int p_timer_interval1 = 10;
 int p_timer_interval2 = 100;
-<<<<<<< HEAD
 int p_timer_interval3 = 1000;
 int p_timer_interval4 = 1500;
-=======
-int p_timer_interval3 = 1500;
->>>>>>> 3de12466a1234aed764e4344e920003fcf939b2f
+
 
 /* Global data structures */
 struct timer_list p_timer;
@@ -160,7 +157,7 @@ irqreturn_t gpio_irq0(int irq, void *dev_id, struct pt_regs *regs)
 	else 
 		direction = 2;
 	if(!IRQ_2)
-		mod_timer( &p_timer1, jiffies+msecs_to_jiffies(p_timer_interval3));
+		mod_timer( &p_timer1, jiffies+msecs_to_jiffies(p_timer_interval4));
 	return IRQ_HANDLED;
 }
 
@@ -173,7 +170,7 @@ irqreturn_t gpio_irq1(int irq, void *dev_id, struct pt_regs *regs)
 	else 
 		direction = 1;
 	if(!IRQ_1)
-		mod_timer( &p_timer1, jiffies+msecs_to_jiffies(p_timer_interval3));
+		mod_timer( &p_timer1, jiffies+msecs_to_jiffies(p_timer_interval4));
 	return IRQ_HANDLED;
 }
 
