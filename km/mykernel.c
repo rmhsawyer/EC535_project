@@ -153,6 +153,7 @@ irqreturn_t gpio_irq0(int irq, void *dev_id, struct pt_regs *regs)
 {
 	//no debounce, active for both edges
 	IRQ_1 = 1;
+	play_mode = 0;
 	if(IRQ_2 == 0)
 		direction = 1;
 	else 
@@ -165,6 +166,7 @@ irqreturn_t gpio_irq0(int irq, void *dev_id, struct pt_regs *regs)
 irqreturn_t gpio_irq1(int irq, void *dev_id, struct pt_regs *regs)
 {
 	IRQ_2 = 1;
+	play_mode = 1;
 	if(IRQ_1 == 0)
 		direction = 2;
 	else 
@@ -185,7 +187,8 @@ void _TimerHandler1(unsigned long data){
 	IRQ_1 = 0;
 	IRQ_2 = 0;
 	direction = 0;
-	printk(numofpeople);
+	printk("timer handler %d\n", numofpeople);
+	//play_mode = 2;
 	return;
 }
 
@@ -260,7 +263,7 @@ static int mygpio_init(void)
 	/* Set up timer  */
 	setup_timer(&p_timer, _TimerHandler, 0);
 	mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval));
-
+	setup_timer(&p_timer1, _TimerHandler1, 0);
 
 	printk(KERN_INFO "P-Timer inserted.\n");
 	return 0;
