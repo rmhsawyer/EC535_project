@@ -67,7 +67,7 @@ static unsigned int GPIO_IR1 = 30; //IR sensor1
 int p_timer_interval = 1;
 int p_timer_interval1 = 10;
 int p_timer_interval2 = 100;
-int p_timer_interval3 = 1000;
+int p_timer_interval3 = 1500;
 
 /* Global data structures */
 struct timer_list p_timer;
