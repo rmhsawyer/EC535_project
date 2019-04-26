@@ -68,6 +68,7 @@ int p_timer_interval = 1;
 int p_timer_interval1 = 10;
 int p_timer_interval2 = 100;
 int p_timer_interval3 = 1000;
+int p_timer_interval4 = 1500;
 
 /* Global data structures */
 struct timer_list p_timer;
@@ -77,9 +78,6 @@ struct gpio_user_info {
 	int play_mode;
 	int numofpeople;
 	unsigned int count_value;
-	char count_period[4];
-	char direction[10];
-	char state[10];
 	char brightness[10];
 };
 static struct gpio_user_info* gpio_data;
@@ -185,7 +183,7 @@ void _TimerHandler1(unsigned long data){
 	IRQ_1 = 0;
 	IRQ_2 = 0;
 	direction = 0;
-	play_mode == 1;
+	printk("timer handler %d\n", numofpeople);
 	return;
 }
 
@@ -203,10 +201,7 @@ static int mygpio_init(void)
 	
 	/* Allocate memory */
 	gpio_data = kmalloc(sizeof (struct gpio_user_info), GFP_KERNEL);
-	head= kmalloc(sizeof (struct BrightnessList), GFP_KERNEL);
-	second= kmalloc(sizeof (struct BrightnessList), GFP_KERNEL);
-	third= kmalloc(sizeof (struct BrightnessList), GFP_KERNEL);
-	cur= kmalloc(sizeof (struct BrightnessList), GFP_KERNEL);
+
 	if (!gpio_data)
 	{ 
 		result = -ENOMEM;
@@ -217,10 +212,6 @@ static int mygpio_init(void)
 	gpio_data->count_value = 0;
 	gpio_data->play_mode = 0;
 	gpio_data->numofpeople = 0;
-	strcpy(gpio_data->count_period, "H");
-	strcpy(gpio_data->direction, "Down");
-	strcpy(gpio_data->state, "Hold");
-	strcpy(gpio_data->brightness, "L");
 
 
 	/* Set up GPIO*/
@@ -309,6 +300,33 @@ static int mygpio_release(struct inode *inode, struct file *filp)
 
 static ssize_t mygpio_read(struct file *filp, char *buf, size_t count, loff_t *f_pos)
 {
+	
+	char line[256];
+	char res[256];
+	if (*f_pos >=256)
+	{
+		return 0;
+	}
+	
+	gpio_data->play_mode = play_mode;
+	gpio_data->numofpeople = numofpeople;
+
+
+
+	strcpy(line,"number of people \n");
+	strcat(line, gpio_data->numofpeople);
+	strcat(line, "\n");
+	strcat(line, "play mode \n");
+	strcat(line, gpio_data->play_mode);
+	strcat(line, "\n");
+	int len = sprintf(res, "%s", line);
+	//printk(line);
+	if (copy_to_user(buf, line, len))
+	{
+		return -EFAULT;
+	}
+	*f_pos += count; 
+	return len; 
 
 	return count;
 }
@@ -316,6 +334,21 @@ static ssize_t mygpio_read(struct file *filp, char *buf, size_t count, loff_t *f
 
 static ssize_t mygpio_write(struct file *filp, const char *buf, size_t count, loff_t *f_pos)
 {
+	char *line = kmalloc(256, GFP_KERNEL);
+	memset(line, 0, 256);
+	if(copy_from_user(line, buf, count)){
+		return -EFAULT;
+	}
+
+	if(line[0]=='m' && strlen(line) == 2){
+		play_mode = line[1] - '0';
+	}
+	
+	else if(line[0]=='r' && strlen(line) == 1){
+		play_mode = 0;
+		numofpeople = 0;
+	}
+	kfree(line);
 	return count;
 }
 
