@@ -76,7 +76,7 @@ struct timer_list p_timer;
 struct timer_list p_timer1;
 
 struct gpio_user_info {
-	char play_mode;
+	char play_mode[3];
 	char numofpeople[3];
 	char brightness[10];
 };
@@ -205,9 +205,6 @@ static int mygpio_init(void)
 
 	/* Initialize data */
 
-	gpio_data->play_mode = '0';
-
-
 
 	/* Set up GPIO*/
     	gpio_direction_input(GPIO_IR0);
@@ -303,8 +300,7 @@ static ssize_t mygpio_read(struct file *filp, char *buf, size_t count, loff_t *f
 		return 0;
 	}
 	
-	gpio_data->play_mode = play_mode + '0';
-	gpio_data->numofpeople = numofpeople;
+	sprintf(gpio_data->play_mode, "%d", play_mode);
 	sprintf(gpio_data->numofpeople, "%d", numofpeople);
 
 
@@ -334,11 +330,11 @@ static ssize_t mygpio_write(struct file *filp, const char *buf, size_t count, lo
 		return -EFAULT;
 	}
 
-	if(line[0]=='m' && strlen(line) == 2){
+	if(line[0]=='m' && strlen(line) == 3){
 		play_mode = line[1] - '0';
 	}
 	
-	else if(line[0]=='r' && strlen(line) == 1){
+	else if(line[0]=='r' && strlen(line) == 2){
 		play_mode = 0;
 		numofpeople = 0;
 	}
