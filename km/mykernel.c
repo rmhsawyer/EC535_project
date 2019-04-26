@@ -144,7 +144,6 @@ irqreturn_t gpio_irq0(int irq, void *dev_id, struct pt_regs *regs)
 {
 	//no debounce, active for both edges
 	IRQ_1 = 1;
-	play_mode = 0;
 	if(IRQ_2 == 0)
 		direction = 1;
 	else 
@@ -157,7 +156,6 @@ irqreturn_t gpio_irq0(int irq, void *dev_id, struct pt_regs *regs)
 irqreturn_t gpio_irq1(int irq, void *dev_id, struct pt_regs *regs)
 {
 	IRQ_2 = 1;
-	play_mode = 1;
 	if(IRQ_1 == 0)
 		direction = 2;
 	else 
