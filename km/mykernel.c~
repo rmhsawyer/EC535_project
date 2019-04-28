@@ -156,8 +156,6 @@ void _TimerHandler(unsigned long data){
 
 
 
-
-
 	else{
 		PWM_PWDUTY0 = (0<<10) | 128;
 		gpio_set_value(GPIO_LEDR, 1);

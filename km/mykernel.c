@@ -49,7 +49,7 @@ struct file_operations gpio_fops = {
 
 /* Global varibles */
 static int mygpio_major = 61;
-static unsigned int play_mode = 4;
+static unsigned int play_mode = 2;
 static unsigned int numofpeople = 0;
 static unsigned int state = 1;
 static unsigned int Brightness = 128; // PWM  = Brightness/128
@@ -162,7 +162,7 @@ void _TimerHandler(unsigned long data){
 		gpio_set_value(GPIO_LEDB, 1);
 		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval3));
 	}
-
+t
 }
 
 
