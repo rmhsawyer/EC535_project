@@ -50,12 +50,13 @@ struct file_operations gpio_fops = {
 /* Global varibles */
 static int mygpio_major = 61;
 static unsigned int play_mode = 2;
-static unsigned int numofpeople = 1;
-static unsigned int state = 1;
+static unsigned int numofpeople = 0;
+static unsigned int state = 4;
 static unsigned int Brightness = 128; // PWM  = Brightness/128
 static unsigned int IRQ_1 = 0;
 static unsigned int IRQ_2 = 0;
 static int direction = 0;
+static int up = 1;
 
 /* GPIO pins */
 static unsigned int GPIO_LEDR = 28; //Red
@@ -104,11 +105,16 @@ void _TimerHandler(unsigned long data){
 	else if(play_mode == 1 && numofpeople != 0){
 		gpio_set_value(GPIO_LEDR, 0);
 		gpio_set_value(GPIO_LEDB, 0);
-		if(Brightness ==128)
-			Brightness = 1;
-		Brightness++;
+		if(up == 1)
+			Brightness++;
+		else
+			Brightness--;
+		if(Brightness == 128)
+			up ==2;
+		if(Brightness == 1)
+			up == 1;
 		PWM_PWDUTY0 = (0<<10) | Brightness;
-		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval1));
+		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval2));
 	}
 
 
@@ -304,7 +310,6 @@ static ssize_t mygpio_read(struct file *filp, char *buf, size_t count, loff_t *f
 	}
 	
 	gpio_data->play_mode = play_mode + '0';
-	gpio_data->numofpeople = numofpeople;
 	sprintf(gpio_data->numofpeople, "%d", numofpeople);
 
 

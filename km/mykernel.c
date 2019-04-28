@@ -50,12 +50,13 @@ struct file_operations gpio_fops = {
 /* Global varibles */
 static int mygpio_major = 61;
 static unsigned int play_mode = 2;
-static unsigned int numofpeople = 1;
-static unsigned int state = 1;
+static unsigned int numofpeople = 0;
+static unsigned int state = 4;
 static unsigned int Brightness = 128; // PWM  = Brightness/128
 static unsigned int IRQ_1 = 0;
 static unsigned int IRQ_2 = 0;
 static int direction = 0;
+static int breath = 1;
 
 /* GPIO pins */
 static unsigned int GPIO_LEDR = 28; //Red
@@ -76,7 +77,7 @@ struct timer_list p_timer;
 struct timer_list p_timer1;
 
 struct gpio_user_info {
-	char play_mode[3];
+	char play_mode;
 	char numofpeople[3];
 	char brightness[10];
 };
@@ -104,11 +105,16 @@ void _TimerHandler(unsigned long data){
 	else if(play_mode == 1 && numofpeople != 0){
 		gpio_set_value(GPIO_LEDR, 0);
 		gpio_set_value(GPIO_LEDB, 0);
-		if(Brightness ==128)
-			Brightness = 1;
-		Brightness++;
+		if(breath == 1)
+			Brightness++;
+		else
+			Brightness--;
+		if(Brightness == 128)
+			breath =2;
+		if(Brightness == 1)
+			breath = 1;
 		PWM_PWDUTY0 = (0<<10) | Brightness;
-		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval1));
+		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval2));
 	}
 
 
@@ -205,6 +211,9 @@ static int mygpio_init(void)
 
 	/* Initialize data */
 
+	gpio_data->play_mode = '0';
+
+
 
 	/* Set up GPIO*/
     	gpio_direction_input(GPIO_IR0);
@@ -300,7 +309,7 @@ static ssize_t mygpio_read(struct file *filp, char *buf, size_t count, loff_t *f
 		return 0;
 	}
 	
-	sprintf(gpio_data->play_mode, "%d", play_mode);
+	gpio_data->play_mode = play_mode + '0';
 	sprintf(gpio_data->numofpeople, "%d", numofpeople);
 
 
@@ -330,11 +339,11 @@ static ssize_t mygpio_write(struct file *filp, const char *buf, size_t count, lo
 		return -EFAULT;
 	}
 
-	if(line[0]=='m' && strlen(line) == 3){
+	if(line[0]=='m' && strlen(line) == 2){
 		play_mode = line[1] - '0';
 	}
 	
-	else if(line[0]=='r' && strlen(line) == 2){
+	else if(line[0]=='r' && strlen(line) == 1){
 		play_mode = 0;
 		numofpeople = 0;
 	}
