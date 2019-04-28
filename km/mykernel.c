@@ -135,6 +135,27 @@ void _TimerHandler(unsigned long data){
 		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval3));
 	}
 
+
+
+	else if(play_mode == 3 && numofpeople != 0){
+		if(state >= 7)
+				state = 1;
+			else
+				state = state + 1;
+		int val = state;
+		if(val%2 == 0)
+			PWM_PWDUTY0 = (0<<10) | 0;//CKEN &= ~(1 << 0);
+		else
+			PWM_PWDUTY0 = (0<<10) | 128;
+		val /= 2;
+		gpio_set_value(GPIO_LEDR, val%2);
+		val /= 2;
+		gpio_set_value(GPIO_LEDB, val%2);
+		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval2));
+	}
+
+
+
 	else{
 		PWM_PWDUTY0 = (0<<10) | 128;
 		gpio_set_value(GPIO_LEDR, 1);
