@@ -49,9 +49,9 @@ struct file_operations gpio_fops = {
 
 /* Global varibles */
 static int mygpio_major = 61;
-static unsigned int play_mode = 2;
+static unsigned int play_mode = 4;
 static unsigned int numofpeople = 0;
-static unsigned int state = 4;
+static unsigned int state = 1;
 static unsigned int Brightness = 128; // PWM  = Brightness/128
 static unsigned int IRQ_1 = 0;
 static unsigned int IRQ_2 = 0;
@@ -77,7 +77,7 @@ struct timer_list p_timer;
 struct timer_list p_timer1;
 
 struct gpio_user_info {
-	char play_mode;
+	char play_mode[3];
 	char numofpeople[3];
 	char brightness[10];
 };
@@ -109,12 +109,12 @@ void _TimerHandler(unsigned long data){
 			Brightness++;
 		else
 			Brightness--;
-		if(Brightness == 128)
+		if(Brightness == 129)
 			breath =2;
-		if(Brightness == 1)
+		if(Brightness == 0)
 			breath = 1;
 		PWM_PWDUTY0 = (0<<10) | Brightness;
-		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval2));
+		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval1));
 	}
 
 
@@ -182,7 +182,7 @@ void _TimerHandler1(unsigned long data){
 	IRQ_1 = 0;
 	IRQ_2 = 0;
 	direction = 0;
-	printk("timer handler %d\n", numofpeople);
+
 	return;
 }
 
@@ -209,7 +209,7 @@ static int mygpio_init(void)
 
 	/* Initialize data */
 
-	gpio_data->play_mode = '0';
+	//gpio_data->play_mode = "";
 
 
 
@@ -307,7 +307,7 @@ static ssize_t mygpio_read(struct file *filp, char *buf, size_t count, loff_t *f
 		return 0;
 	}
 	
-	gpio_data->play_mode = play_mode + '0';
+	sprintf(gpio_data->play_mode, "%d", play_mode);
 	sprintf(gpio_data->numofpeople, "%d", numofpeople);
 
 
@@ -337,11 +337,11 @@ static ssize_t mygpio_write(struct file *filp, const char *buf, size_t count, lo
 		return -EFAULT;
 	}
 
-	if(line[0]=='m' && strlen(line) == 2){
+	if(line[0]=='m' && strlen(line) == 3){
 		play_mode = line[1] - '0';
 	}
 	
-	else if(line[0]=='r' && strlen(line) == 1){
+	else if(line[0]=='r' && strlen(line) == 2){
 		play_mode = 0;
 		numofpeople = 0;
 	}
