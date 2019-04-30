@@ -360,8 +360,13 @@ static ssize_t mygpio_write(struct file *filp, const char *buf, size_t count, lo
 	if(line[0]=='p' && strlen(line) == 3){
 		if(line[1] == '+')
 			numofpeople++;
-		else
-			numofpeople--;
+		else{
+			if(numofpeople <= 0)
+				numofpeople = 0;
+			else
+				numofpeople--;
+		}
+			
 	}
 	
 	//reset
