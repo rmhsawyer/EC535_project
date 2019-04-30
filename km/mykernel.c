@@ -64,7 +64,7 @@ static unsigned int GPIO_LEDB = 29; //Blue
 static unsigned int GPIO_IR0 = 101; //IR sensor0
 static unsigned int GPIO_IR1 = 30; //IR sensor1
 
-/* Timer */
+/* Timer Intervals*/
 int p_timer_interval = 1;
 int p_timer_interval1 = 10;
 int p_timer_interval2 = 100;
@@ -83,15 +83,9 @@ struct gpio_user_info {
 };
 static struct gpio_user_info* gpio_data;
 
-struct BrightnessList{
-    unsigned int val;
-    char brightness[10];
-    struct BrightnessList *next;
- };
 
 
-
-
+/*Functions */
 void _TimerHandler(unsigned long data){
 	
 	if(play_mode == 0 || numofpeople == 0){
@@ -162,9 +156,23 @@ void _TimerHandler(unsigned long data){
 		gpio_set_value(GPIO_LEDB, 1);
 		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval3));
 	}
-t
+
 }
 
+void _TimerHandler1(unsigned long data){
+	if(IRQ_2 == 1 && IRQ_1 == 1)
+	{	
+		if(direction == 1)
+			numofpeople++;
+		if(direction == 2)
+			numofpeople = numofpeople<1? 0 : numofpeople-1;
+	}
+	IRQ_1 = 0;
+	IRQ_2 = 0;
+	direction = 0;
+
+	return;
+}
 
 
 irqreturn_t gpio_irq0(int irq, void *dev_id, struct pt_regs *regs)
@@ -192,20 +200,6 @@ irqreturn_t gpio_irq1(int irq, void *dev_id, struct pt_regs *regs)
 	return IRQ_HANDLED;
 }
 
-void _TimerHandler1(unsigned long data){
-	if(IRQ_2 == 1 && IRQ_1 == 1)
-	{	
-		if(direction == 1)
-			numofpeople++;
-		if(direction == 2)
-			numofpeople = numofpeople<1? 0 : numofpeople-1;
-	}
-	IRQ_1 = 0;
-	IRQ_2 = 0;
-	direction = 0;
-
-	return;
-}
 
 static int mygpio_init(void)
 {
@@ -228,9 +222,6 @@ static int mygpio_init(void)
 		goto fail; 
 	}
 
-	/* Initialize data */
-
-	//gpio_data->play_mode = "";
 
 
 
@@ -361,6 +352,15 @@ static ssize_t mygpio_write(struct file *filp, const char *buf, size_t count, lo
 	if(line[0]=='m' && strlen(line) == 3){
 		play_mode = line[1] - '0';
 	}
+
+
+	if(line[0]=='p' && strlen(line) == 3){
+		if(line[1] == '+')
+			numofpeople++;
+		else
+			numofpeople--;
+	}
+	
 	
 	else if(line[0]=='r' && strlen(line) == 2){
 		play_mode = 0;
