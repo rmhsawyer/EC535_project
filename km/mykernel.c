@@ -88,6 +88,7 @@ static struct gpio_user_info* gpio_data;
 /*Functions */
 void _TimerHandler(unsigned long data){
 	
+	/*Mode 0 turn off*/
 	if(play_mode == 0 || numofpeople == 0){
 		PWM_PWDUTY0 = (0<<10) | 0;
 		gpio_set_value(GPIO_LEDR, 0);
@@ -95,7 +96,8 @@ void _TimerHandler(unsigned long data){
 		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval3));
 	
 	}
-
+	
+	/*Mode 1 breathing light*/
 	else if(play_mode == 1 && numofpeople != 0){
 		gpio_set_value(GPIO_LEDR, 0);
 		gpio_set_value(GPIO_LEDB, 0);
@@ -111,7 +113,7 @@ void _TimerHandler(unsigned long data){
 		mod_timer( &p_timer, jiffies+msecs_to_jiffies(p_timer_interval1));
 	}
 
-
+	/*Mode 2 strobe lights slow*/
 	else if(play_mode == 2 && numofpeople != 0){
 		if(state >= 7)
 				state = 1;
@@ -130,7 +132,7 @@ void _TimerHandler(unsigned long data){
 	}
 
 
-
+	/*Mode 3 strobe lights fast*/
 	else if(play_mode == 3 && numofpeople != 0){
 		if(state >= 7)
 				state = 1;
@@ -149,7 +151,7 @@ void _TimerHandler(unsigned long data){
 	}
 
 
-
+	/*Mode 4 white light*/
 	else{
 		PWM_PWDUTY0 = (0<<10) | 128;
 		gpio_set_value(GPIO_LEDR, 1);
@@ -349,11 +351,12 @@ static ssize_t mygpio_write(struct file *filp, const char *buf, size_t count, lo
 		return -EFAULT;
 	}
 
+	//change mode
 	if(line[0]=='m' && strlen(line) == 3){
 		play_mode = line[1] - '0';
 	}
 
-
+	//change people
 	if(line[0]=='p' && strlen(line) == 3){
 		if(line[1] == '+')
 			numofpeople++;
@@ -361,7 +364,7 @@ static ssize_t mygpio_write(struct file *filp, const char *buf, size_t count, lo
 			numofpeople--;
 	}
 	
-	
+	//reset
 	else if(line[0]=='r' && strlen(line) == 2){
 		play_mode = 0;
 		numofpeople = 0;
