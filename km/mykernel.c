@@ -374,7 +374,7 @@ static ssize_t mygpio_write(struct file *filp, const char *buf, size_t count, lo
 	
 	//reset
 	else if(line[0]=='r' && strlen(line) == 2){
-		play_mode = 0;
+		play_mode = 2;
 		numofpeople = 0;
 	}
 	kfree(line);
