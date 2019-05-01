@@ -29,7 +29,10 @@ static ssize_t mygpio_read(struct file *filp, char *buf, size_t count, loff_t *f
 static ssize_t mygpio_write(struct file *filp, const char *buf, size_t count, loff_t *f_pos);
 static void mygpio_exit(void);
 static int mygpio_init(void);
-
+void _TimerHandler(unsigned long data);
+void _TimerHandler1(unsigned long data);
+irqreturn_t gpio_irq0(int irq, void *dev_id, struct pt_regs *regs);
+irqreturn_t gpio_irq1(int irq, void *dev_id, struct pt_regs *regs);
 
 /* Declaration of the init and exit functions */
 module_init(mygpio_init);
