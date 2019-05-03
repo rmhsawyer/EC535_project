@@ -52,9 +52,9 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = Friday_gui.cpp \
+SOURCES       = gui.cpp \
 		main.cpp moc_gui.cpp
-OBJECTS       = Friday_gui.o \
+OBJECTS       = gui.o \
 		main.o \
 		moc_gui.o
 DIST          = /ad/eng/courses/ec/ec535/gumstix/oe/qt/mkspecs/common/g++.conf \
@@ -161,7 +161,7 @@ qmake:  FORCE
 
 dist: 
 	@$(CHK_DIR_EXISTS) .tmp/qt1.0.0 || $(MKDIR) .tmp/qt1.0.0 
-	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/qt1.0.0/ && $(COPY_FILE) --parents Friday_gui.h .tmp/qt1.0.0/ && $(COPY_FILE) --parents Friday_gui.cpp main.cpp .tmp/qt1.0.0/ && (cd `dirname .tmp/qt1.0.0` && $(TAR) qt1.0.0.tar qt1.0.0 && $(COMPRESS) qt1.0.0.tar) && $(MOVE) `dirname .tmp/qt1.0.0`/qt1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/qt1.0.0
+	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/qt1.0.0/ && $(COPY_FILE) --parents gui.h .tmp/qt1.0.0/ && $(COPY_FILE) --parents gui.cpp main.cpp .tmp/qt1.0.0/ && (cd `dirname .tmp/qt1.0.0` && $(TAR) qt1.0.0.tar qt1.0.0 && $(COMPRESS) qt1.0.0.tar) && $(MOVE) `dirname .tmp/qt1.0.0`/qt1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/qt1.0.0
 
 
 clean:compiler_clean 
@@ -183,8 +183,8 @@ mocables: compiler_moc_header_make_all compiler_moc_source_make_all
 compiler_moc_header_make_all: moc_gui.cpp
 compiler_moc_header_clean:
 	-$(DEL_FILE) moc_gui.cpp
-moc_gui.cpp: Friday_gui.h
-	/ad/eng/projects/linux/ec535/gumstix/oe/qt/bin/moc $(DEFINES) $(INCPATH) Friday_gui.h -o moc_gui.cpp
+moc_gui.cpp: gui.h
+	/ad/eng/projects/linux/ec535/gumstix/oe/qt/bin/moc $(DEFINES) $(INCPATH) gui.h -o moc_gui.cpp
 
 compiler_rcc_make_all:
 compiler_rcc_clean:
@@ -205,10 +205,10 @@ compiler_clean: compiler_moc_header_clean
 
 ####### Compile
 
-Friday_gui.o: Friday_gui.cpp Friday_gui.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Friday_gui.o Friday_gui.cpp
+gui.o: gui.cpp gui.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gui.o gui.cpp
 
-main.o: main.cpp Friday_gui.h
+main.o: main.cpp gui.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 moc_gui.o: moc_gui.cpp 
