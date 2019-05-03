@@ -33,7 +33,7 @@ A .ko file whose name is mygpio.ko will be generated. You may need to send this 
 
 Also remember to send the "build.sh" shell file to your gumstix. It includes all commands to insert the kernel module, set all export variables, and start the qt application.<br />
 
-If you have got everything settled, you can type in the following command in terminal:
+If you have got everything settled, you can type in the following command in terminal to start:
 ```
 chmod 777 build.sh
 ./build.sh
