@@ -5,19 +5,15 @@ As there are already many smart home music player products in the market, we pla
 ## Getting Started
 
 To get our project running on your gumstix board. You may first get your bluetooth device being able to be connected with your gumstix. Following setup steps at the following link:
-```
 https://wiki.gumstix.com/index.php/Category:How_to_-_bluetooth
+```
+“hcitool dev”: returns your device’s own address.
+“hcitool scan”: lists all nearby Bluetooth devices.
+“sdptool browse” returns more in-depth information.
 ```
 
 ### Prerequisites
-“hcitool dev”: returns your device’s own address.
-• “hcitool scan”: lists all nearby Bluetooth devices.
-• “sdptool browse” returns more in-depth information.
-• Using the gcc examples given earlier lets you compile against
-libbluetooth.so.
-• Use header files such as hci.h, bluetooth.h.
-• Code example:
-– http://people.csail.mit.edu/albert/bluez-intro/c404.html
+Download the music_control.sh into the directory /media/card/project/scripts/
 
 ### Installing
 
