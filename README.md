@@ -17,16 +17,12 @@ Download the music_control.sh into the directory /media/card/project/scripts/
 
 ### Installing
 
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
+For the Qt app, you can go to the github directory,then go to /projectqt/ folder. Type in terminal
 
 ```
-Give the example
+make
 ```
-
-And repeat
-
+A qt executable app whose name is "qt" will be generated. By sending this app to gumstix, you can have the app running on your device.
 ```
 until finished
 ```
