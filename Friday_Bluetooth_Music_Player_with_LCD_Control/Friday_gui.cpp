@@ -1,17 +1,25 @@
 #include <Friday_gui.h>
 
+//the people count read from the driver.
 char rpeople[4];
+
+// the mode read from the driver.
 char rmode[4];
+
+// the permision of music play from ui.
+// ui owns the highest priority of deciding if the music is able to play.
+// set it to be 1 in the very beginning. ZYW.
 int uiplay = 1;
 
 
 //state == 0: no song is playing.
 //state == 1: a song is playing.
-//state == 2: a song is paused.
-// Play button handler
+//state == 2: a song is paused. ZYW.
+
 // Constructor to generate the GUI
 Friday_gui::Friday_gui(QWidget *parent) : QWidget(parent)
 {
+	//1. Reading songs from the directory, filling the QListWidget with songs read from the target folder.
 	// Create the songs list widget
 	songs = new QListWidget(this);
 
@@ -33,12 +41,14 @@ Friday_gui::Friday_gui(QWidget *parent) : QWidget(parent)
 		songs->insertItem(i,item);
 	}
 
-	// Create a new grid layout for widgets to be added to
+
+	// 2. Creating objects for QPushButtons, QLineEdits, and QTimer. Linking the buttons with handler functions defined later.
+	// Create a new timer for keep updating the value of people and the display mode.
 	timer = new QTimer(this);
 	connect(timer, SIGNAL(timeout()), this, SLOT(timer_update()));
 	timer->start(1000);
 
-
+	// Create a new grid layout for widgets to be added to
 	layout = new QGridLayout(this);
 
 	// Create play button and connect it to a button handler
@@ -63,11 +73,11 @@ Friday_gui::Friday_gui(QWidget *parent) : QWidget(parent)
 	minus = new QPushButton("-", this);
 	connect(minus, SIGNAL(clicked()), this, SLOT(minus_handler()));
 
-	// Create reset button and connect it to a button handler
+	// Create next button and connect it to a button handler
 	next = new QPushButton("Next", this);
 	connect(next, SIGNAL(clicked()), this, SLOT(next_handler()));
 
-	// Create reset button and connect it to a button handler
+	// Create prev button and connect it to a button handler
 	prev = new QPushButton("Prev", this);
 	connect(prev, SIGNAL(clicked()), this, SLOT(prev_handler()));
 
@@ -80,9 +90,8 @@ Friday_gui::Friday_gui(QWidget *parent) : QWidget(parent)
 	nowplaying = new QLineEdit;
 	nowplaying->setText("");
 	
-	uiplay = 1;
 
-
+	// 3. Designing the layout of GUI by putting objects into the grid layout object.
 	layout->addWidget(songs, 0, 0, -1, 1);//
 	layout->addWidget(start, 0, 1);
 	layout->addWidget(nowplaying, 1, 1);
@@ -97,6 +106,9 @@ Friday_gui::Friday_gui(QWidget *parent) : QWidget(parent)
 	layout->addWidget(change, 5, 2);
 	this->setLayout(layout);
 
+
+	// 4. Assigning an original value for tracking variables, like state, mode, csong, and uiplay.
+	uiplay = 1;
 	state = 0;
 	mode = 0;
 	csong = 0;

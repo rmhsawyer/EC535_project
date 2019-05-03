@@ -4,7 +4,7 @@ case "$1" in
 	# Case: Start a new song
 	-s)
 	echo start $2
-	madplay $2 -r 44100 --output=wave:- | aplay -D d80 & > output
+	madplay $2 -r 44100 --output=wave:- | aplay -D jbl & > output
 	;;
 
 	# Case: Stop the current song
