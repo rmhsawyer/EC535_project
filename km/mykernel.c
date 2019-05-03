@@ -58,8 +58,8 @@ static unsigned int state = 1;
 static unsigned int Brightness = 128; // PWM  = Brightness/128
 static unsigned int IRQ_1 = 0;
 static unsigned int IRQ_2 = 0;
-static int direction = 0;
-static int breath = 1;
+static int direction = 0; // Coming in or out
+static int breath = 1; // For PWM
 
 /* GPIO pins */
 static unsigned int GPIO_LEDR = 28; //Red
@@ -164,6 +164,7 @@ void _TimerHandler(unsigned long data){
 
 }
 
+// Update people
 void _TimerHandler1(unsigned long data){
 	if(IRQ_2 == 1 && IRQ_1 == 1)
 	{	
@@ -179,7 +180,7 @@ void _TimerHandler1(unsigned long data){
 	return;
 }
 
-
+//IR sensor 0 handler
 irqreturn_t gpio_irq0(int irq, void *dev_id, struct pt_regs *regs)
 {
 	//no debounce, active for both edges
@@ -193,6 +194,7 @@ irqreturn_t gpio_irq0(int irq, void *dev_id, struct pt_regs *regs)
 	return IRQ_HANDLED;
 }
 
+//IR sensor 1 handler
 irqreturn_t gpio_irq1(int irq, void *dev_id, struct pt_regs *regs)
 {
 	IRQ_2 = 1;
